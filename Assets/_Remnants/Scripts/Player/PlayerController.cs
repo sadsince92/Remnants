@@ -13,9 +13,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
     [SerializeField] private float fallGravityMultiplier = 1.5f;
+    [SerializeField] private float jumpBufferTime = 0.1f;
     private bool jumpRequested;
     private bool jumpCutRequested;
     private float baseGravity;
+    private float jumpBufferCounter;
     #endregion
 
     #region Ground Check Settings
@@ -55,9 +57,9 @@ public class PlayerController : MonoBehaviour
         //Debug.Log("Moving Right");
         }
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
         {
-        jumpRequested = true;
+            jumpBufferCounter = jumpBufferTime;
         }
         if (Keyboard.current.spaceKey.wasReleasedThisFrame)
         {
@@ -66,6 +68,7 @@ public class PlayerController : MonoBehaviour
 
         FlipSprite();
         UpdateAnimation();
+        jumpBufferCounter -= Time.deltaTime;
     }
     private void FixedUpdate()
     {
@@ -73,10 +76,10 @@ public class PlayerController : MonoBehaviour
 
         rb.linearVelocityX = moveInput * moveSpeed;
 
-        if (jumpRequested)
+        if (jumpBufferCounter > 0f && isGrounded)
         {
             Jump();
-            jumpRequested = false;
+            jumpBufferCounter = 0f;
         }
 
         if (jumpCutRequested)
