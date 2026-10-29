@@ -22,6 +22,7 @@ public class BackgroundTiling : MonoBehaviour
         cameraHalfWidth = mainCamera.orthographicSize * mainCamera.aspect;
 
         spriteWidth = sr.bounds.size.x;
+        Debug.Log($"{gameObject.name}: Sprite Width = {spriteWidth}, Camera Half Width = {cameraHalfWidth}");
 
         rightTile = Instantiate(gameObject, transform.parent);
         rightTile.GetComponent<BackgroundTiling>().enabled = false; // Disable the script on the new tile
