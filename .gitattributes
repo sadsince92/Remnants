@@ -46,7 +46,7 @@
 *.guiskin               unity-yaml
 *.lighting              unity-yaml
 *.mask                  unity-yaml
-*.mat                   unity-yaml
+*.mat                   unity-yaml linguist-vendored
 *.meta                  unity-yaml
 *.mixer                 unity-yaml
 *.overrideController    unity-yaml
@@ -170,5 +170,3 @@ Packages/packages-lock.json linguist-generated
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
 
-# GitHub Language Detection
-*.mat linguist-vendored
