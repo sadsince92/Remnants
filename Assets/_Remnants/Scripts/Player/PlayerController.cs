@@ -14,10 +14,22 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpCutMultiplier = 0.5f;
     [SerializeField] private float fallGravityMultiplier = 1.5f;
     [SerializeField] private float jumpBufferTime = 0.1f;
-    private bool jumpRequested;
     private bool jumpCutRequested;
     private float baseGravity;
     private float jumpBufferCounter;
+    #endregion
+
+    #region Dash Settings
+    [SerializeField] private float dashSpeed = 12f;
+    [SerializeField] private float dashDuration = 0.2f;
+    [SerializeField] private GameObject dashDustPrefab;
+    [SerializeField] private Vector2 dashDustOffset = new Vector2(0f, -0.5f);
+    private bool isDashing;
+    private bool airDashAvailable = true;
+    private float dashTimer;
+    private float dashDirection;
+    private float groundDashCooldownTimer;
+    [SerializeField] private float groundDashCooldown = 0.5f;
     #endregion
 
     #region Ground Check Settings
@@ -57,15 +69,41 @@ public class PlayerController : MonoBehaviour
         //Debug.Log("Moving Right");
         }
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (!isDashing)
         {
-            jumpBufferCounter = jumpBufferTime;
+            if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                jumpBufferCounter = jumpBufferTime;
+            }
+            if (Keyboard.current.spaceKey.wasReleasedThisFrame)
+            {
+                jumpCutRequested = true;
+            }
         }
-        if (Keyboard.current.spaceKey.wasReleasedThisFrame)
+        if (Keyboard.current.leftShiftKey.wasPressedThisFrame && !isDashing)
         {
-            jumpCutRequested = true;
+            if (isGrounded && groundDashCooldownTimer <= 0f)
+            {
+                StartDash();
+            }
+            else if (!isGrounded && airDashAvailable)
+            {
+                StartDash();
+            }
         }
+        if (isDashing)
+        {
+            dashTimer -= Time.deltaTime;
 
+            if (dashTimer <= 0f)
+            {
+                EndDash();
+            }
+        }
+        if (groundDashCooldownTimer > 0f)
+        {
+            groundDashCooldownTimer -= Time.deltaTime;
+        }
         FlipSprite();
         UpdateAnimation();
         jumpBufferCounter -= Time.deltaTime;
@@ -74,6 +112,12 @@ public class PlayerController : MonoBehaviour
     {
         CheckGrounded();
 
+        if (isDashing)
+        {
+            rb.linearVelocity = new Vector2(dashDirection * dashSpeed, 0f);
+            return;
+        }
+
         rb.linearVelocityX = moveInput * moveSpeed;
 
         if (jumpBufferCounter > 0f && isGrounded)
@@ -81,17 +125,17 @@ public class PlayerController : MonoBehaviour
             Jump();
             jumpBufferCounter = 0f;
         }
-
         if (jumpCutRequested)
         {
             JumpCut();
             jumpCutRequested = false;
         }
-
         ApplyFallGravity();
     }
     private void FlipSprite()
     {
+        if (isDashing) return;
+
         if (moveInput < 0f)
         {
             sr.flipX = true;
@@ -108,12 +152,19 @@ public class PlayerController : MonoBehaviour
     }
     private void CheckGrounded()
     {
+        bool wasGrounded = isGrounded;
+
         Bounds bounds = col.bounds;
 
         Vector2 boxCenter = new Vector2(bounds.center.x, bounds.min.y - groundCheckDistance / 2f);
         Vector2 boxSize = new Vector2(bounds.size.x * 0.9f, groundCheckDistance);
 
         isGrounded = Physics2D.OverlapBox(boxCenter, boxSize, 0f, groundLayer) != null;
+
+        if (isGrounded && !wasGrounded)
+        {
+            airDashAvailable = true;
+        }
     }
     private void Jump()
     {
@@ -127,6 +178,47 @@ public class PlayerController : MonoBehaviour
         }
         //Debug.Log("Jump Cut Activated!");
     }
+
+    private void StartDash()
+    {
+        isDashing = true;
+
+        if (isGrounded)
+        {
+            groundDashCooldownTimer = groundDashCooldown;
+        }
+        else
+        {
+            airDashAvailable = false;
+        }
+
+        jumpBufferCounter = 0f;
+        jumpCutRequested = false;
+
+        dashTimer = dashDuration;
+
+        dashDirection = sr.flipX ? -1f : 1f;
+
+        rb.gravityScale = 0f;
+        rb.linearVelocity = new Vector2(dashDirection * dashSpeed, 0f);
+
+        anim.SetBool("isDashing", true);
+
+        Vector3 dustPosition = transform.position + new Vector3(-dashDirection * dashDustOffset.x, dashDustOffset.y, 0f);
+        GameObject dust = Instantiate(dashDustPrefab, dustPosition, Quaternion.identity);
+        dust.GetComponent<SpriteRenderer>().flipX = dashDirection < 0f;
+    }
+
+    private void EndDash()
+    {
+        isDashing = false;
+        //Debug.Log("Dash ended!");
+        rb.gravityScale = baseGravity;
+        rb.linearVelocityX = 0f;
+
+        anim.SetBool("isDashing", false);
+    }
+
     private void ApplyFallGravity()
     {
         if (rb.linearVelocityY < 0f)
