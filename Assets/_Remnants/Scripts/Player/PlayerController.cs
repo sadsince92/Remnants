@@ -5,40 +5,48 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     #region Movement Settings
+    // -- MOVEMENT -- //
     [SerializeField] private float moveSpeed = 5f;
     private float moveInput;
     #endregion
 
     #region Jump Settings
+    // -- JUMP -- //
     [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
     [SerializeField] private float fallGravityMultiplier = 1.5f;
     [SerializeField] private float jumpBufferTime = 0.1f;
+    [SerializeField] private float coyoteTime = 0.1f;
+    private float coyoteTimeCounter;
     private bool jumpCutRequested;
     private float baseGravity;
     private float jumpBufferCounter;
     #endregion
 
     #region Dash Settings
+    // -- DASH -- // 
     [SerializeField] private float dashSpeed = 12f;
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private GameObject dashDustPrefab;
     [SerializeField] private Vector2 dashDustOffset = new Vector2(0f, -0.5f);
+    [SerializeField] private float groundDashCooldown = 0.5f;
     private bool isDashing;
     private bool airDashAvailable = true;
     private float dashTimer;
     private float dashDirection;
     private float groundDashCooldownTimer;
-    [SerializeField] private float groundDashCooldown = 0.5f;
+    
     #endregion
 
     #region Ground Check Settings
+    // -- GROUND CHECK -- //
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckDistance = 0.1f;
     private bool isGrounded;
     #endregion
 
     #region Component References
+    // -- CHARACTER COMPONENTS -- //
     private Rigidbody2D rb;
     private SpriteRenderer sr;
     private Animator anim;
@@ -112,6 +120,16 @@ public class PlayerController : MonoBehaviour
     {
         CheckGrounded();
 
+        // Coyote Time
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.fixedDeltaTime;
+        }
+
         if (isDashing)
         {
             rb.linearVelocity = new Vector2(dashDirection * dashSpeed, 0f);
@@ -120,16 +138,18 @@ public class PlayerController : MonoBehaviour
 
         rb.linearVelocityX = moveInput * moveSpeed;
 
-        if (jumpBufferCounter > 0f && isGrounded)
+        if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
         {
             Jump();
             jumpBufferCounter = 0f;
+            coyoteTimeCounter = 0f;
         }
         if (jumpCutRequested)
         {
             JumpCut();
             jumpCutRequested = false;
         }
+
         ApplyFallGravity();
     }
     private void FlipSprite()
@@ -193,6 +213,7 @@ public class PlayerController : MonoBehaviour
         }
 
         jumpBufferCounter = 0f;
+        coyoteTimeCounter = 0f;
         jumpCutRequested = false;
 
         dashTimer = dashDuration;
