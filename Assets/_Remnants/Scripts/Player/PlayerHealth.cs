@@ -17,12 +17,14 @@ public class PlayerHealth : MonoBehaviour
     #region Component References
     [SerializeField] private HealthBarUI healthBarUI;
     private SpriteRenderer spriteRenderer;
+    private Animator animator;
     #endregion
 
     private void Awake()
     {
         currentHealth = maxHealth;
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     private void Start()
@@ -70,5 +72,12 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Max(currentHealth - damage, 0);
         healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
         invincibilityTimer = invincibilityDuration;
+
+        animator.SetBool("isHurt", true);
+        animator.SetTrigger("Hurt");
+    }
+    public void EndHurt()
+    {
+        animator.SetBool("isHurt", false);
     }
 }
