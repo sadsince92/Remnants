@@ -8,18 +8,41 @@ public class PlayerHealth : MonoBehaviour
     private int currentHealth;
     #endregion
 
+    #region Invincibility Settings
+    [SerializeField] private float invincibilityDuration = 1f;
+    [SerializeField] private float flashInterval = 0.1f;
+    private float invincibilityTimer;
+    #endregion
+
     #region Component References
     [SerializeField] private HealthBarUI healthBarUI;
+    private SpriteRenderer spriteRenderer;
     #endregion
 
     private void Awake()
     {
         currentHealth = maxHealth;
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     private void Start()
     {
         healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
+    }
+
+    private void Update()
+    {
+        if (invincibilityTimer > 0f)
+        {
+            invincibilityTimer -= Time.deltaTime;
+
+            spriteRenderer.enabled =
+                Mathf.FloorToInt(invincibilityTimer / flashInterval) % 2 == 0;
+        }
+        else
+        {
+            spriteRenderer.enabled = true;
+        }
     }
 
     /* private void Update()
@@ -39,13 +62,13 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        if (invincibilityTimer > 0f)
+        {
+            return;
+        }
+
         currentHealth = Mathf.Max(currentHealth - damage, 0);
         healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
-    }
-
-    public void Heal(int amount)
-    {
-        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
-        healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
+        invincibilityTimer = invincibilityDuration;
     }
 }
