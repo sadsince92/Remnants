@@ -242,7 +242,7 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyFallGravity()
     {
-        if (rb.linearVelocityY < 0f)
+        if (!isGrounded && rb.linearVelocityY < 0f)
         {
             rb.gravityScale = baseGravity * fallGravityMultiplier;
         }
