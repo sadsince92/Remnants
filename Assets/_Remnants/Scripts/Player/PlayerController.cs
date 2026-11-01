@@ -44,6 +44,10 @@ public class PlayerController : MonoBehaviour
     private bool isKnockedBack;
     private float knockbackTimer;
     #endregion
+    #region Attack Settings
+    // -- ATTACK -- //
+    private bool isAttacking;
+    #endregion
 
     #region Ground Check Settings
     // -- GROUND CHECK -- //
@@ -119,7 +123,16 @@ public class PlayerController : MonoBehaviour
         {
             groundDashCooldownTimer -= Time.deltaTime;
         }
+        // Attack Input
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (isGrounded && !isDashing && !isKnockedBack && !isAttacking)
+            {
+                StartAttack();
+            }
+        }
         FlipSprite();
+
         UpdateAnimation();
         jumpBufferCounter -= Time.deltaTime;
     }
@@ -158,6 +171,13 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        if (isAttacking)
+        {
+            rb.linearVelocityX = 0f;
+            ApplyFallGravity();
+            return;
+        }
+
         rb.linearVelocityX = moveInput * moveSpeed;
 
         if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
@@ -176,7 +196,8 @@ public class PlayerController : MonoBehaviour
     }
     private void FlipSprite()
     {
-        if (isDashing) return;
+        // Preventing Angie from changing directions while mid attack
+        if (isDashing || isAttacking) return;
 
         if (moveInput < 0f)
         {
@@ -189,8 +210,18 @@ public class PlayerController : MonoBehaviour
     }
     private void UpdateAnimation()
     {
-        anim.SetBool("isMoving", moveInput != 0f);
+        anim.SetBool("isMoving", moveInput != 0f && !isAttacking);
         anim.SetBool("isGrounded", isGrounded);
+    }
+    private void StartAttack()
+    {
+        isAttacking = true;
+        anim.SetTrigger("attack1");
+    }
+    public void EndAttack()
+    {
+        //Debug.Log("EndAttack called!");
+        isAttacking = false;
     }
     private void CheckGrounded()
     {
