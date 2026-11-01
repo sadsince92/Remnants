@@ -17,7 +17,14 @@ public class PlayerAnimationEvents : MonoBehaviour
     {
         playerHealth.EndHurt();
     }
-
+    public void EnableDashCancel()
+    {
+        playerController.EnableDashCancel();
+    }
+    public void BeginAttack2()
+    {
+        playerController.BeginAttack2();
+    }
     public void EndAttack()
     {
         playerController.EndAttack();

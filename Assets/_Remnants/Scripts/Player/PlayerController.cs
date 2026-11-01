@@ -46,7 +46,12 @@ public class PlayerController : MonoBehaviour
     #endregion
     #region Attack Settings
     // -- ATTACK -- //
+    [SerializeField] private float comboWindow = 0.4f;
     private bool isAttacking;
+    private bool attackBuffered;
+    private int currentAttack;
+    private float comboTimer;
+    private bool attackCanDashCancel;
     #endregion
 
     #region Ground Check Settings
@@ -99,7 +104,7 @@ public class PlayerController : MonoBehaviour
                 jumpCutRequested = true;
             }
         }
-        if (Keyboard.current.leftShiftKey.wasPressedThisFrame && !isDashing && !isKnockedBack)
+        if (Keyboard.current.leftShiftKey.wasPressedThisFrame && !isDashing && !isKnockedBack && (!isAttacking || attackCanDashCancel))
         {
             if (isGrounded && groundDashCooldownTimer <= 0f)
             {
@@ -126,9 +131,31 @@ public class PlayerController : MonoBehaviour
         // Attack Input
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            if (isGrounded && !isDashing && !isKnockedBack && !isAttacking)
+            if (isGrounded && !isDashing && !isKnockedBack)
             {
-                StartAttack();
+                if (isAttacking)
+                {
+                    // Queue Attack 2 while Attack 1 is playing
+                    if (currentAttack == 1)
+                    {
+                        attackBuffered = true;
+                        anim.SetBool("comboQueued", true);
+                    }
+                }
+                else
+                {
+                    StartAttack();
+                }
+            }
+        }
+        if (comboTimer > 0f && !isAttacking)
+        {
+            comboTimer -= Time.deltaTime;
+
+            if (comboTimer <= 0f)
+            {
+                comboTimer = 0f;
+                currentAttack = 0;
             }
         }
         FlipSprite();
@@ -216,12 +243,73 @@ public class PlayerController : MonoBehaviour
     private void StartAttack()
     {
         isAttacking = true;
-        anim.SetTrigger("attack1");
+        attackCanDashCancel = false;
+
+        if (currentAttack == 1 && comboTimer > 0f)
+        {
+            // Continue the combo with Attack 2
+            currentAttack = 2;
+            comboTimer = 0f;
+            attackBuffered = false;
+
+            anim.SetBool("comboQueued", false);
+            anim.SetTrigger("attack2");
+        }
+        else
+        {
+            // Start a fresh combo with Attack 1
+            currentAttack = 1;
+            comboTimer = 0f;
+            attackBuffered = false;
+
+            anim.SetBool("comboQueued", false);
+            anim.SetTrigger("attack1");
+        }
     }
     public void EndAttack()
     {
-        //Debug.Log("EndAttack called!");
+        attackCanDashCancel = false;
+
+        if (currentAttack == 1 && attackBuffered)
+        {
+            attackBuffered = false;
+            currentAttack = 2;
+            comboTimer = 0f;
+            return;
+        }
+
+        if (currentAttack == 1)
+        {
+            comboTimer = comboWindow;
+        }
+        else
+        {
+            comboTimer = 0f;
+            currentAttack = 0;
+            anim.SetBool("comboQueued", false);
+        }
+
         isAttacking = false;
+    }
+    public void BeginAttack2()
+    {
+        attackCanDashCancel = false;
+    }
+    public void EnableDashCancel()
+    {
+        attackCanDashCancel = true;
+    }
+    private void CancelAttack()
+    {
+        isAttacking = false;
+        attackBuffered = false;
+        currentAttack = 0;
+        comboTimer = 0f;
+        attackCanDashCancel = false;
+
+        anim.SetBool("comboQueued", false);
+        anim.ResetTrigger("attack1");
+        anim.ResetTrigger("attack2");
     }
     private void CheckGrounded()
     {
@@ -254,6 +342,11 @@ public class PlayerController : MonoBehaviour
 
     private void StartDash()
     {
+        if (isAttacking)
+        {
+            CancelAttack();
+        }
+
         isDashing = true;
 
         if (isGrounded)
