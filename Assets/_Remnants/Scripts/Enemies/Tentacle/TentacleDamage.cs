@@ -6,14 +6,13 @@ public class TentacleHazard : MonoBehaviour
     [SerializeField] private int contactDamage = 20;
     #endregion
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerStay2D(Collider2D other)
     {
         PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
 
         if (playerHealth != null)
         {
-            playerHealth.TakeDamage(contactDamage);
+            playerHealth.TakeDamage(contactDamage, transform.position);
         }
     }
 }
-

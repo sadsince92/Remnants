@@ -18,6 +18,7 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private HealthBarUI healthBarUI;
     private SpriteRenderer spriteRenderer;
     private Animator animator;
+    private PlayerController playerController;
     #endregion
 
     private void Awake()
@@ -25,6 +26,7 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = maxHealth;
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         animator = GetComponentInChildren<Animator>();
+        playerController = GetComponent<PlayerController>();
     }
 
     private void Start()
@@ -62,7 +64,7 @@ public class PlayerHealth : MonoBehaviour
         }
     } */
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, Vector2 damageSourcePosition)
     {
         if (invincibilityTimer > 0f)
         {
@@ -75,6 +77,8 @@ public class PlayerHealth : MonoBehaviour
 
         animator.SetBool("isHurt", true);
         animator.SetTrigger("Hurt");
+
+        playerController.ApplyKnockback(damageSourcePosition);
     }
     public void EndHurt()
     {

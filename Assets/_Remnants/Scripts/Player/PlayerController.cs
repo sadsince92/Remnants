@@ -35,7 +35,14 @@ public class PlayerController : MonoBehaviour
     private float dashTimer;
     private float dashDirection;
     private float groundDashCooldownTimer;
-    
+    #endregion
+
+    #region Knockback Settings
+    // -- KNOCKBACK -- //
+    [SerializeField] private float knockbackForce = 8f;
+    [SerializeField] private float knockbackDuration = 0.2f;
+    private bool isKnockedBack;
+    private float knockbackTimer;
     #endregion
 
     #region Ground Check Settings
@@ -88,7 +95,7 @@ public class PlayerController : MonoBehaviour
                 jumpCutRequested = true;
             }
         }
-        if (Keyboard.current.leftShiftKey.wasPressedThisFrame && !isDashing)
+        if (Keyboard.current.leftShiftKey.wasPressedThisFrame && !isDashing && !isKnockedBack)
         {
             if (isGrounded && groundDashCooldownTimer <= 0f)
             {
@@ -128,6 +135,21 @@ public class PlayerController : MonoBehaviour
         else
         {
             coyoteTimeCounter -= Time.fixedDeltaTime;
+        }
+
+        if (isKnockedBack)
+        {
+            knockbackTimer -= Time.fixedDeltaTime;
+
+            if (knockbackTimer <= 0f)
+            {
+                isKnockedBack = false;
+            }
+            else
+            {
+                ApplyFallGravity();
+                return;
+            }
         }
 
         if (isDashing)
@@ -240,6 +262,34 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("isDashing", false);
     }
 
+    public void ApplyKnockback(Vector2 damageSourcePosition)
+    {
+        // Which side of the enemy Angie is on
+        float knockbackDirection;
+
+        if (isDashing)
+        {
+            knockbackDirection = -dashDirection;
+        }
+        else
+        {
+            knockbackDirection = transform.position.x < damageSourcePosition.x ? -1f : 1f;
+        }
+        if (isDashing)
+        {
+            EndDash();
+        }
+
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+
+        // Clear pending jumps
+        jumpBufferCounter = 0f;
+        jumpCutRequested = false;
+
+        // Apply horizontal knockback without pushing Angie upwards
+        rb.linearVelocity = new Vector2(knockbackDirection * knockbackForce, Mathf.Min(rb.linearVelocityY, 0f));
+    }
     private void ApplyFallGravity()
     {
         if (!isGrounded && rb.linearVelocityY < 0f)
