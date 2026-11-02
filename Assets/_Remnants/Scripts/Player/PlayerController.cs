@@ -271,6 +271,8 @@ public class PlayerController : MonoBehaviour
             comboTimer = 0f;
             attackBuffered = false;
 
+            attackHitbox.ConfigureAttack(2);
+
             anim.SetBool("comboQueued", false);
             anim.SetTrigger("attack2");
         }
@@ -280,6 +282,8 @@ public class PlayerController : MonoBehaviour
             currentAttack = 1;
             comboTimer = 0f;
             attackBuffered = false;
+
+            attackHitbox.ConfigureAttack(1);
 
             anim.SetBool("comboQueued", false);
             anim.SetTrigger("attack1");
@@ -326,6 +330,7 @@ public class PlayerController : MonoBehaviour
     public void BeginAttack2()
     {
         attackCanDashCancel = false;
+        attackHitbox.ConfigureAttack(2);
     }
 
     public void EnableDashCancel()
