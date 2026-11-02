@@ -8,9 +8,14 @@ public class EnemyHealth : MonoBehaviour
     private int currentHealth;
     #endregion
 
+    #region Component References
+    private Animator anim;
+    #endregion
+
     private void Awake()
     {
         currentHealth = maxHealth;
+        anim = GetComponentInChildren<Animator>();
     }
 
     public void TakeDamage(int damage)
@@ -22,6 +27,10 @@ public class EnemyHealth : MonoBehaviour
         if (currentHealth <= 0)
         {
             Die();
+        }
+        else
+        {
+            anim.SetTrigger("hurt");
         }
     }
 
