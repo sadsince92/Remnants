@@ -67,6 +67,7 @@ public class PlayerController : MonoBehaviour
     private SpriteRenderer sr;
     private Animator anim;
     private CapsuleCollider2D col;
+    [SerializeField] private AttackHitbox attackHitbox;
     #endregion
 
     private void Awake()
@@ -78,6 +79,7 @@ public class PlayerController : MonoBehaviour
 
         baseGravity = rb.gravityScale;
     }
+
     private void Update()
     {
         moveInput = 0f;
@@ -163,6 +165,7 @@ public class PlayerController : MonoBehaviour
         UpdateAnimation();
         jumpBufferCounter -= Time.deltaTime;
     }
+
     private void FixedUpdate()
     {
         CheckGrounded();
@@ -221,9 +224,10 @@ public class PlayerController : MonoBehaviour
 
         ApplyFallGravity();
     }
+
     private void FlipSprite()
     {
-        // Preventing Angie from changing directions while mid attack
+        // Prevent Angie from changing directions while mid attack
         if (isDashing || isAttacking) return;
 
         if (moveInput < 0f)
@@ -234,12 +238,27 @@ public class PlayerController : MonoBehaviour
         {
             sr.flipX = false;
         }
+
+        // Update attack hitbox direction
+        UpdateAttackHitboxDirection();
     }
+
+    private void UpdateAttackHitboxDirection()
+    {
+        Vector3 hitboxPosition = attackHitbox.transform.localPosition;
+
+        hitboxPosition.x = Mathf.Abs(hitboxPosition.x) *
+            (sr.flipX ? -1f : 1f);
+
+        attackHitbox.transform.localPosition = hitboxPosition;
+    }
+
     private void UpdateAnimation()
     {
         anim.SetBool("isMoving", moveInput != 0f && !isAttacking);
         anim.SetBool("isGrounded", isGrounded);
     }
+
     private void StartAttack()
     {
         isAttacking = true;
@@ -266,8 +285,20 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("attack1");
         }
     }
+
+    public void EnableAttackHitbox()
+    {
+        attackHitbox.EnableHitbox();
+    }
+
+    public void DisableAttackHitbox()
+    {
+        attackHitbox.DisableHitbox();
+    }
+
     public void EndAttack()
     {
+        attackHitbox.DisableHitbox();
         attackCanDashCancel = false;
 
         if (currentAttack == 1 && attackBuffered)
@@ -291,16 +322,21 @@ public class PlayerController : MonoBehaviour
 
         isAttacking = false;
     }
+
     public void BeginAttack2()
     {
         attackCanDashCancel = false;
     }
+
     public void EnableDashCancel()
     {
         attackCanDashCancel = true;
     }
+
     private void CancelAttack()
     {
+        attackHitbox.DisableHitbox();
+
         isAttacking = false;
         attackBuffered = false;
         currentAttack = 0;
@@ -311,6 +347,7 @@ public class PlayerController : MonoBehaviour
         anim.ResetTrigger("attack1");
         anim.ResetTrigger("attack2");
     }
+
     private void CheckGrounded()
     {
         bool wasGrounded = isGrounded;
@@ -327,10 +364,12 @@ public class PlayerController : MonoBehaviour
             airDashAvailable = true;
         }
     }
+
     private void Jump()
     {
         rb.linearVelocityY = jumpForce;
     }
+
     private void JumpCut()
     {
         if (rb.linearVelocityY > 0f)
@@ -342,6 +381,8 @@ public class PlayerController : MonoBehaviour
 
     private void StartDash()
     {
+        attackHitbox.DisableHitbox();
+
         if (isAttacking)
         {
             CancelAttack();
@@ -414,6 +455,7 @@ public class PlayerController : MonoBehaviour
         // Apply horizontal knockback without pushing Angie upwards
         rb.linearVelocity = new Vector2(knockbackDirection * knockbackForce, Mathf.Min(rb.linearVelocityY, 0f));
     }
+
     private void ApplyFallGravity()
     {
         if (!isGrounded && rb.linearVelocityY < 0f)

@@ -29,4 +29,14 @@ public class PlayerAnimationEvents : MonoBehaviour
     {
         playerController.EndAttack();
     }
+    public void EnableAttackHitbox()
+    {
+        playerController.EnableAttackHitbox();
+    }
+
+    public void DisableAttackHitbox()
+    {
+        playerController.DisableAttackHitbox();
+    }
+
 }
