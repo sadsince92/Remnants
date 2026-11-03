@@ -21,6 +21,7 @@ public class AttackHitbox : MonoBehaviour
 
     #region Component References
     private BoxCollider2D hitboxCollider;
+    [SerializeField] private ParticleSystem hitParticlesPrefab;
     #endregion
 
     private HashSet<EnemyHealth> enemiesHit = new HashSet<EnemyHealth>();
@@ -66,7 +67,19 @@ public class AttackHitbox : MonoBehaviour
             return;
 
         enemiesHit.Add(enemy);
+
+        Vector2 hitPosition = other.ClosestPoint(hitboxCollider.bounds.center);
+
         enemy.TakeDamage(attackDamage);
+
+        if (hitParticlesPrefab != null)
+        {
+            ParticleSystem particles = Instantiate(hitParticlesPrefab, hitPosition, Quaternion.identity);
+                
+            particles.Play();
+
+            Destroy(particles.gameObject, 1f);
+        }
     }
 }
 

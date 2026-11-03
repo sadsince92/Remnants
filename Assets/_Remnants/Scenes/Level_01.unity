@@ -225,7 +225,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f523791860011c46889e511bbc653fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 40
+  maxHealth: 100000
   deathFadeDuration: 1
 --- !u!1 &330585543
 GameObject:
@@ -2262,6 +2262,7 @@ MonoBehaviour:
   attack2Damage: 30
   attack2Size: {x: 1.6, y: 1.2}
   attack2Offset: {x: 0, y: -0.1}
+  hitParticlesPrefab: {fileID: 4536505033992471347, guid: a05711692f221d04995eca4b1dba6fb2, type: 3}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
