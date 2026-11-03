@@ -1,10 +1,16 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(100)]
 public class BackgroundTiling : MonoBehaviour
 {
     #region Component References
     private SpriteRenderer sr;
     private Camera mainCamera;
+    #endregion
+
+    #region Parallax Settings
+    [SerializeField, Range(0f, 1f)] private float parallaxFactor = 0.5f;
+    private float previousCameraX;
     #endregion
 
     #region Tiling Parameters
@@ -19,6 +25,7 @@ public class BackgroundTiling : MonoBehaviour
     {
         sr = GetComponent<SpriteRenderer>();
         mainCamera = Camera.main;
+        previousCameraX = mainCamera.transform.position.x;
         cameraHalfWidth = mainCamera.orthographicSize * mainCamera.aspect;
 
         spriteWidth = sr.bounds.size.x;
@@ -42,7 +49,20 @@ public class BackgroundTiling : MonoBehaviour
     void LateUpdate()
     {
         float cameraX = mainCamera.transform.position.x;
+
+        // Calculate how far the camera moved
+        float cameraDeltaX = cameraX - previousCameraX;
+
+        // Move all three background tiles together
+        foreach (Transform tile in tiles)
+        {
+            tile.position += Vector3.right * cameraDeltaX * parallaxFactor;
+        }
+
+        // Remember the camera position for the next frame
+        previousCameraX = cameraX;
         float recycleDistance = spriteWidth - cameraHalfWidth;
+
         while (cameraX > tiles[1].position.x + recycleDistance)
         {
             tiles[0].position = tiles[2].position + Vector3.right * spriteWidth;
@@ -53,6 +73,7 @@ public class BackgroundTiling : MonoBehaviour
             tiles[1] = tiles[2];
             tiles[2] = recycledTile;
         }
+
         while (cameraX < tiles[1].position.x - recycleDistance)
         {
             tiles[2].position = tiles[0].position + Vector3.left * spriteWidth;
