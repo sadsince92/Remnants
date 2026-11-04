@@ -22,6 +22,12 @@ public class DreamShardCollectible : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+
+            if (playerHealth != null)
+            {
+                playerHealth.Heal(20);
+            }
             if (counterUI != null)
             {
                 counterUI.AddDreamShard();

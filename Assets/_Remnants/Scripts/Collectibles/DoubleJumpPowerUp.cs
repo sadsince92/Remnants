@@ -10,6 +10,12 @@ public class DoubleJumpPowerUp : MonoBehaviour
         if (player != null)
         {
             player.UnlockDoubleJump();
+            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+
+            if (playerHealth != null)
+            {
+                playerHealth.IncreaseMaxHealth(20);
+            }
             GameObject effect = Instantiate(collectFXPrefab, other.transform);
             effect.transform.localPosition = new Vector3(0f, -0.3f, 0f);
             Destroy(gameObject);

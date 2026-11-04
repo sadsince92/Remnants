@@ -80,6 +80,20 @@ public class PlayerHealth : MonoBehaviour
 
         playerController.ApplyKnockback(damageSourcePosition);
     }
+    public void Heal(int amount)
+    {
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+
+        healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
+    }
+    public void IncreaseMaxHealth(int amount)
+    {
+        maxHealth += amount;
+
+        currentHealth += amount;
+
+        healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
+    }
     public void EndHurt()
     {
         animator.SetBool("isHurt", false);
