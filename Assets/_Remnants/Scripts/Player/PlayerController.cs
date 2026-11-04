@@ -23,6 +23,12 @@ public class PlayerController : MonoBehaviour
     private float jumpBufferCounter;
     #endregion
 
+    #region Double Jump
+    // -- DOUBLE JUMP -- //
+    [SerializeField] private bool hasDoubleJump = false;
+    private int jumpsRemaining;
+    #endregion
+
     #region Dash Settings
     // -- DASH -- // 
     [SerializeField] private float dashSpeed = 12f;
@@ -44,6 +50,7 @@ public class PlayerController : MonoBehaviour
     private bool isKnockedBack;
     private float knockbackTimer;
     #endregion
+
     #region Attack Settings
     // -- ATTACK -- //
     [SerializeField] private float comboWindow = 0.4f;
@@ -78,6 +85,7 @@ public class PlayerController : MonoBehaviour
         col = GetComponent<CapsuleCollider2D>();
 
         baseGravity = rb.gravityScale;
+        jumpsRemaining = hasDoubleJump ? 2 : 1;
     }
 
     private void Update()
@@ -178,6 +186,19 @@ public class PlayerController : MonoBehaviour
         else
         {
             coyoteTimeCounter -= Time.fixedDeltaTime;
+
+            // Once coyote time expires, the first jump is no longer available.
+            if (coyoteTimeCounter <= 0f && rb.linearVelocityY <= 0f)
+            {
+                if (hasDoubleJump && jumpsRemaining == 2)
+                {
+                    jumpsRemaining = 1;
+                }
+                else if (!hasDoubleJump && jumpsRemaining == 1)
+                {
+                    jumpsRemaining = 0;
+                }
+            }
         }
 
         if (isKnockedBack)
@@ -210,11 +231,22 @@ public class PlayerController : MonoBehaviour
 
         rb.linearVelocityX = moveInput * moveSpeed;
 
-        if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
+        if (jumpBufferCounter > 0f)
         {
-            Jump();
-            jumpBufferCounter = 0f;
-            coyoteTimeCounter = 0f;
+            if (coyoteTimeCounter > 0f && jumpsRemaining > 0)
+            {
+                Jump();
+                jumpsRemaining--;
+                jumpBufferCounter = 0f;
+                coyoteTimeCounter = 0f;
+            }
+            else if (hasDoubleJump && jumpsRemaining > 0)
+            {
+                Jump();
+                jumpsRemaining--;
+                jumpBufferCounter = 0f;
+                coyoteTimeCounter = 0f;
+            }
         }
         if (jumpCutRequested)
         {
@@ -364,10 +396,20 @@ public class PlayerController : MonoBehaviour
 
         isGrounded = Physics2D.OverlapBox(boxCenter, boxSize, 0f, groundLayer) != null;
 
-        if (isGrounded && !wasGrounded)
+        if (isGrounded && rb.linearVelocityY <= 0f)
         {
             airDashAvailable = true;
+
+            if (hasDoubleJump)
+            {
+                jumpsRemaining = 2;
+            }
+            else
+            {
+                jumpsRemaining = 1;
+            }
         }
+
     }
 
     private void Jump()
@@ -470,6 +512,25 @@ public class PlayerController : MonoBehaviour
         else
         {
             rb.gravityScale = baseGravity;
+        }
+    }
+
+    public void UnlockDoubleJump()
+    {
+        if (hasDoubleJump)
+        {
+            return;
+        }
+
+        hasDoubleJump = true;
+
+        if (isGrounded)
+        {
+            jumpsRemaining = 2;
+        }
+        else
+        {
+            jumpsRemaining = Mathf.Max(jumpsRemaining, 1);
         }
     }
 }
