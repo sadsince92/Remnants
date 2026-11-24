@@ -24,6 +24,11 @@ public class DreamShardCollectible : MonoBehaviour
         {
             PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
 
+            if (playerHealth == null || playerHealth.IsDead)
+            {
+                return;
+            }
+
             if (playerHealth != null)
             {
                 playerHealth.Heal(20);

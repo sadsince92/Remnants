@@ -4,6 +4,10 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
+    #region Death Settings
+    private bool isDead = false;
+    #endregion
+
     #region Movement Settings
     // -- MOVEMENT -- //
     [SerializeField] private float moveSpeed = 5f;
@@ -90,17 +94,22 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead)
+        {
+            return;
+        }
+
         moveInput = 0f;
 
         if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
         {
-        moveInput = -1f;
-        //Debug.Log("Moving Left");
+            moveInput = -1f;
+            //Debug.Log("Moving Left");
         }
         else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
         {
-        moveInput = 1f;
-        //Debug.Log("Moving Right");
+            moveInput = 1f;
+            //Debug.Log("Moving Right");
         }
 
         if (!isDashing)
@@ -176,6 +185,11 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead)
+        {
+            return;
+        }
+
         CheckGrounded();
 
         // Coyote Time
@@ -324,6 +338,11 @@ public class PlayerController : MonoBehaviour
 
     public void EnableAttackHitbox()
     {
+        if (isDead)
+        {
+            return;
+        }
+
         attackHitbox.EnableHitbox();
     }
 
@@ -361,10 +380,14 @@ public class PlayerController : MonoBehaviour
 
     public void BeginAttack2()
     {
+        if (isDead)
+        {
+            return;
+        }
+
         attackCanDashCancel = false;
         attackHitbox.ConfigureAttack(2);
     }
-
     public void EnableDashCancel()
     {
         attackCanDashCancel = true;
@@ -476,6 +499,11 @@ public class PlayerController : MonoBehaviour
 
     public void ApplyKnockback(Vector2 damageSourcePosition)
     {
+        if (isDead)
+        {
+            return;
+        }
+
         // Which side of the enemy Angie is on
         float knockbackDirection;
 
@@ -491,6 +519,10 @@ public class PlayerController : MonoBehaviour
         {
             EndDash();
         }
+        if (isAttacking)
+        {
+            CancelAttack();
+        }
 
         isKnockedBack = true;
         knockbackTimer = knockbackDuration;
@@ -501,6 +533,28 @@ public class PlayerController : MonoBehaviour
 
         // Apply horizontal knockback without pushing Angie upwards
         rb.linearVelocity = new Vector2(knockbackDirection * knockbackForce, Mathf.Min(rb.linearVelocityY, 0f));
+    }
+
+    public void HandleDeath()
+    {
+        isDead = true;
+
+        CancelAttack();
+
+        if (isDashing)
+        {
+            EndDash();
+        }
+
+        isKnockedBack = false;
+        moveInput = 0f;
+        jumpBufferCounter = 0f;
+        jumpCutRequested = false;
+
+        rb.gravityScale = baseGravity;
+        rb.linearVelocity = Vector2.zero;
+
+        anim.SetBool("isMoving", false);
     }
 
     private void ApplyFallGravity()

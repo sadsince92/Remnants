@@ -6,19 +6,19 @@ public class DoubleJumpPowerUp : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         PlayerController player = other.GetComponent<PlayerController>();
+        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
 
-        if (player != null)
+        if (player == null || playerHealth == null || playerHealth.IsDead)
         {
-            player.UnlockDoubleJump();
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-
-            if (playerHealth != null)
-            {
-                playerHealth.IncreaseMaxHealth(20);
-            }
-            GameObject effect = Instantiate(collectFXPrefab, other.transform);
-            effect.transform.localPosition = new Vector3(0f, -0.3f, 0f);
-            Destroy(gameObject);
+            return;
         }
+
+        player.UnlockDoubleJump();
+        playerHealth.IncreaseMaxHealth(20);
+
+        GameObject effect = Instantiate(collectFXPrefab, other.transform);
+        effect.transform.localPosition = new Vector3(0f, -0.3f, 0f);
+
+        Destroy(gameObject);
     }
 }

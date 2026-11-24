@@ -6,6 +6,8 @@ public class PlayerHealth : MonoBehaviour
     #region Health Settings
     [SerializeField] private int maxHealth = 100;
     private int currentHealth;
+    private bool isDead = false;
+    public bool IsDead => isDead;
     #endregion
 
     #region Invincibility Settings
@@ -66,13 +68,20 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int damage, Vector2 damageSourcePosition)
     {
-        if (invincibilityTimer > 0f)
+        if (isDead || invincibilityTimer > 0f)
         {
             return;
         }
 
         currentHealth = Mathf.Max(currentHealth - damage, 0);
         healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
+
+        if (currentHealth <= 0)
+        {
+            Die();
+            return;
+        }
+
         invincibilityTimer = invincibilityDuration;
 
         animator.SetBool("isHurt", true);
@@ -80,20 +89,45 @@ public class PlayerHealth : MonoBehaviour
 
         playerController.ApplyKnockback(damageSourcePosition);
     }
+
+    private void Die()
+    {
+        isDead = true;
+
+        invincibilityTimer = 0f;
+        spriteRenderer.enabled = true;
+
+        playerController.HandleDeath();
+
+        animator.SetBool("isHurt", false);
+        animator.ResetTrigger("Hurt");
+
+        animator.SetBool("isDead", true);
+        animator.SetTrigger("death");
+    }
+
     public void Heal(int amount)
     {
+        if (isDead)
+        {
+            return;
+        }
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
-
         healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
     }
+
     public void IncreaseMaxHealth(int amount)
     {
+        if (isDead)
+        {
+            return;
+        }
+
         maxHealth += amount;
-
         currentHealth += amount;
-
         healthBarUI.UpdateHealthBar(currentHealth, maxHealth);
     }
+
     public void EndHurt()
     {
         animator.SetBool("isHurt", false);
